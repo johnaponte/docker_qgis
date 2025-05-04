@@ -1,0 +1,48 @@
+services:
+  qgis:
+    build:
+      context: ./qgis
+    container_name: qgis
+    ports:
+      - "5901:5901"
+    restart: unless-stopped
+    volumes:
+      - ./data/qgis-projects:/home/qgis/qgis-projects
+      - ./data/qgis-config/.local/share/QGIS:/home/qgis/.local/share/QGIS
+      - ./data/qgis-config/.config/QGIS:/home/qgis/.config/QGIS
+
+  guacd:
+    image: guacamole/guacd:latest
+    container_name: guacd
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_USER: guacuser
+      MYSQL_PASSWORD: guacpass
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+
+  guacamole:
+    image: guacamole/guacamole:latest
+    container_name: guacamole
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      GUACD_HOSTNAME: guacd
+      MYSQL_HOSTNAME: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_USER: guacuser
+      MYSQL_PASSWORD: guacpass
+      MYSQL_ROOT_PASSWORD: rootpass
+    depends_on:
+      - guacd
+      - mysql
