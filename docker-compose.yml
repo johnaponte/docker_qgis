@@ -2,10 +2,13 @@ services:
   qgis:
     build:
       context: ./qgis
-    container_name: qgis
+      args:
+        QGIS_CHANNEL: ubuntu-ltr  # Options: ubuntu, ubuntu-ltr
+    container_name: qgis  
     ports:
       - "5901:5901"
     restart: unless-stopped
+
     volumes:
       - ./data/qgis-projects:/home/qgis/qgis-projects
       - ./data/qgis-config/.local/share/QGIS:/home/qgis/.local/share/QGIS
@@ -32,8 +35,6 @@ services:
       GUAC_PASS: mypass123
     volumes:
       - ./data/mysql:/var/lib/mysql
-
-
 
 
   guacamole:

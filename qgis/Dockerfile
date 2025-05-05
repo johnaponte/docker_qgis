@@ -1,6 +1,4 @@
-FROM ubuntu:24.04 
-
-ARG QGIS_CHANNEL=stable   # Options: stable, ltr
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -27,16 +25,19 @@ RUN apt-get update && apt-get install -y \
     x11-utils \
     lxde \
     dbus-x11 \
-    notify-osd  
+    notify-osd  &&\
+    mv /usr/bin/lxpolkit /usr/bin/lxpolkit.disabled
+
+ARG QGIS_CHANNEL
 
 # Add QGIS GPG key
 RUN mkdir -p /etc/apt/keyrings && \
     wget -O /etc/apt/keyrings/qgis-archive-keyring.gpg \
     https://download.qgis.org/downloads/qgis-archive-keyring.gpg
 
-# Add QGIS .sources file
+# Add QGIS .sources file using the selected QGIS_CHANNEL
 RUN echo "Types: deb deb-src\n\
-URIs: https://qgis.org/debian\n\
+URIs: https://qgis.org/${QGIS_CHANNEL}\n\
 Suites: $(lsb_release -c -s)\n\
 Architectures: amd64\n\
 Components: main\n\
