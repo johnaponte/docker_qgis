@@ -1,15 +1,19 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Instalar dependencias
+# Install basic tools and desktop dependencies
 RUN apt-get update && apt-get install -y \
-    sudo \
-    wget \
-    gnupg \
-    lsb-release \
     ca-certificates \
+    gnupg \
+    wget \
+    sudo \
+    lsb-release \
     software-properties-common \
+    fonts-open-sans \
+    fonts-dejavu \
+    fonts-liberation \
+    fonts-freefont-ttf \
     x11vnc \
     xvfb \
     xterm \
@@ -21,39 +25,50 @@ RUN apt-get update && apt-get install -y \
     x11-utils \
     lxde \
     dbus-x11 \
+    notify-osd  &&\
+    mv /usr/bin/lxpolkit /usr/bin/lxpolkit.disabled
+
+ARG QGIS_CHANNEL
+
+# Add QGIS GPG key
+RUN mkdir -p /etc/apt/keyrings && \
+    wget -O /etc/apt/keyrings/qgis-archive-keyring.gpg \
+    https://download.qgis.org/downloads/qgis-archive-keyring.gpg
+
+# Add QGIS .sources file using the selected QGIS_CHANNEL
+RUN echo "Types: deb deb-src\n\
+URIs: https://qgis.org/${QGIS_CHANNEL}\n\
+Suites: $(lsb_release -c -s)\n\
+Architectures: amd64\n\
+Components: main\n\
+Signed-By: /etc/apt/keyrings/qgis-archive-keyring.gpg" \
+> /etc/apt/sources.list.d/qgis.sources
+
+# Install QGIS and GRASS plugin
+RUN apt-get update && apt-get install -y \
     qgis \
-    qgis-plugin-grass
+    qgis-plugin-grass 
 
+# Create non-root user
+RUN useradd -ms /bin/bash qgis && \
+    echo "qgis:qgis" | chpasswd && \
+    adduser qgis sudo && \
+    mkdir -p /tmp/.X11-unix && \
+    chmod 1777 /tmp/.X11-unix && \
+    touch /home/qgis/.Xresources && \
+    chown qgis:qgis /home/qgis/.Xresources
 
-# Crear /tmp/.X11-unix con los permisos correctos
-RUN mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
-    
-# Crear usuario no root
-RUN useradd -ms /bin/bash qgis && echo "qgis:qgis" | chpasswd && adduser qgis sudo
-RUN touch /home/qgis/.Xresources && chown qgis:qgis /home/qgis/.Xresources
+# Disable lxpolkit to avoid session warnings
+RUN sed -i '/lxpolkit/d' /etc/xdg/lxsession/LXDE/autostart
 
-# Configurar VNC password para qgis (usa 'vncpass' como clave)
-#RUN mkdir -p /home/qgis/.vnc && \
-#    echo "vncpass" | vncpasswd -f > /home/qgis/.vnc/passwd && \
-#    chmod 600 /home/qgis/.vnc/passwd && \
-#    chown -R qgis:qgis /home/qgis/.vnc
+# Copy startup script
+COPY init.sh /home/qgis/init.sh
+RUN chmod +x /home/qgis/init.sh && chown qgis:qgis /home/qgis/init.sh
 
 USER qgis
 ENV USER=qgis
 WORKDIR /home/qgis
 
-
-# Expone el puerto VNC
 EXPOSE 5901
 
-
-# Start Xvfb and x11vnc with dynamic resolution support
-#CMD ["sh", "-c", "Xvfb :0 -screen 0 1920x1080x24 +extension RANDR & \
-#          sleep 2 && \
-#          x11vnc -display :0 -forever -passwdfile /home/qgis/.vnc/passwd -shared -rfbport 5901 -noxdamage -xrandr"]
-
-CMD sh -c   "Xvfb :0 -screen 0 1920x1080x24 +extension RANDR & \
-            sleep 2 && \
-            export DISPLAY=:0 && \
-            lxsession & \
-            x11vnc -display :0 -forever -nopw -shared -rfbport 5901 -noxdamage -xrandr"          
+CMD ["./init.sh"]
