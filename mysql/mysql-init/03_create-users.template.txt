@@ -1,0 +1,43 @@
+USE guacamole_db;
+
+-- GUACADMIN -----------------------------------------------
+INSERT INTO guacamole_entity (name, type)
+VALUES ('${GUACADMIN_USER}', 'USER');
+
+-- Generate secure salt and hash for GUACADMIN
+SET @salt_admin = UNHEX(SHA2(UUID(), 256));
+SET @hash_admin = UNHEX(SHA2(CONCAT('${GUACADMIN_PASS}', HEX(@salt_admin)), 256));
+
+INSERT INTO guacamole_user (entity_id, password_hash, password_salt, password_date)
+SELECT entity_id, @hash_admin, @salt_admin, NOW()
+FROM guacamole_entity WHERE name = '${GUACADMIN_USER}';
+
+-- Grant system permissions to GUACADMIN
+INSERT INTO guacamole_system_permission (entity_id, permission)
+SELECT entity_id, permission FROM (
+    SELECT '${GUACADMIN_USER}' AS username, 'CREATE_CONNECTION'       AS permission
+    UNION SELECT '${GUACADMIN_USER}', 'CREATE_CONNECTION_GROUP'
+    UNION SELECT '${GUACADMIN_USER}', 'CREATE_SHARING_PROFILE'
+    UNION SELECT '${GUACADMIN_USER}', 'CREATE_USER'
+    UNION SELECT '${GUACADMIN_USER}', 'CREATE_USER_GROUP'
+    UNION SELECT '${GUACADMIN_USER}', 'ADMINISTER'
+) perms
+JOIN guacamole_entity e ON e.name = perms.username;
+
+-- GUAC_USER -----------------------------------------------
+INSERT INTO guacamole_entity (name, type)
+VALUES ('${GUAC_USER}', 'USER');
+
+-- Generate secure salt and hash for GUAC_USER
+SET @salt_user = UNHEX(SHA2(UUID(), 256));
+SET @hash_user = UNHEX(SHA2(CONCAT('${GUAC_PASS}', HEX(@salt_user)), 256));
+
+INSERT INTO guacamole_user (entity_id, password_hash, password_salt, password_date)
+SELECT entity_id, @hash_user, @salt_user, NOW()
+FROM guacamole_entity WHERE name = '${GUAC_USER}';
+
+-- GRANT read access to "QGIS Remote" connection
+SET @conn_id := (SELECT connection_id FROM guacamole_connection WHERE connection_name = 'QGIS Remote');
+
+INSERT INTO guacamole_connection_permission (entity_id, connection_id, permission)
+SELECT entity_id, @conn_id, 'READ' FROM guacamole_entity WHERE name IN ('${GUACADMIN_USER}', '${GUAC_USER}');
