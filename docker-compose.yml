@@ -12,12 +12,13 @@ services:
       - ./data/qgis-config/.config/QGIS:/home/qgis/.config/QGIS
 
   guacd:
-    image: guacamole/guacd:latest
+    image: guacamole/guacd:1.5.5
     container_name: guacd
     restart: unless-stopped
 
   mysql:
-    image: mysql:8.0
+    build:
+      context: ./mysql
     container_name: mysql
     restart: unless-stopped
     environment:
@@ -25,12 +26,18 @@ services:
       MYSQL_DATABASE: guacamole_db
       MYSQL_USER: guacuser
       MYSQL_PASSWORD: guacpass
+      GUACADMIN_USER: guacadmin
+      GUACADMIN_PASS: guacadmin
+      GUAC_USER: myuser
+      GUAC_PASS: mypass123
     volumes:
       - ./data/mysql:/var/lib/mysql
-      - ./initdb:/docker-entrypoint-initdb.d:ro
+
+
+
 
   guacamole:
-    image: guacamole/guacamole:latest
+    image: guacamole/guacamole:1.5.5
     container_name: guacamole
     restart: unless-stopped
     ports:

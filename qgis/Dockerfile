@@ -30,6 +30,7 @@ RUN mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
     
 # Crear usuario no root
 RUN useradd -ms /bin/bash qgis && echo "qgis:qgis" | chpasswd && adduser qgis sudo
+RUN touch /home/qgis/.Xresources && chown qgis:qgis /home/qgis/.Xresources
 
 # Configurar VNC password para qgis (usa 'vncpass' como clave)
 #RUN mkdir -p /home/qgis/.vnc && \
@@ -44,7 +45,7 @@ WORKDIR /home/qgis
 
 # Expone el puerto VNC
 EXPOSE 5901
-RUN touch /home/qgis/.Xresources && chown qgis:qgis /home/qgis/.Xresources
+
 
 # Start Xvfb and x11vnc with dynamic resolution support
 #CMD ["sh", "-c", "Xvfb :0 -screen 0 1920x1080x24 +extension RANDR & \
