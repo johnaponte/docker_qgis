@@ -1,7 +1,8 @@
 FROM mysql:8.4
 
 # Install envsubst (gettext)
-RUN microdnf install -y gettext && microdnf clean all
+RUN microdnf install -y gettext \
+    && microdnf clean all
 
 # Copy the SQL template into the init directory
 COPY mysql-init/ /mysql-init/

@@ -3,37 +3,32 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install basic tools and desktop dependencies
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    gnupg \
-    wget \
-    sudo \
-    lsb-release \
-    software-properties-common \
-    fonts-open-sans \
-    fonts-dejavu \
-    fonts-liberation \
-    fonts-freefont-ttf \
-    x11vnc \
-    xvfb \
-    xterm \
-    x11-xserver-utils \
-    xfonts-75dpi \
-    xfonts-100dpi \
-    arandr \
-    lxrandr \
-    x11-utils \
-    lxde \
-    dbus-x11 \
-    notify-osd  &&\
-    mv /usr/bin/lxpolkit /usr/bin/lxpolkit.disabled
+RUN apt-get update \
+    && apt-get install -y \
+        xrdp \
+        xfce4 \
+        dbus-x11 \
+        x11-xserver-utils \
+        ca-certificates \
+        gnupg \
+        wget \
+        sudo \
+        lsb-release \
+        software-properties-common \
+        fonts-open-sans \
+        fonts-dejavu \
+        fonts-liberation \
+        fonts-freefont-ttf \
+        x11-utils \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG QGIS_CHANNEL
 
 # Add QGIS GPG key
-RUN mkdir -p /etc/apt/keyrings && \
-    wget -O /etc/apt/keyrings/qgis-archive-keyring.gpg \
-    https://download.qgis.org/downloads/qgis-archive-keyring.gpg
+RUN mkdir -p /etc/apt/keyrings \
+    && wget -O /etc/apt/keyrings/qgis-archive-keyring.gpg \
+        https://download.qgis.org/downloads/qgis-archive-keyring.gpg
 
 # Add QGIS .sources file using the selected QGIS_CHANNEL
 RUN echo "Types: deb deb-src\n\
@@ -45,30 +40,34 @@ Signed-By: /etc/apt/keyrings/qgis-archive-keyring.gpg" \
 > /etc/apt/sources.list.d/qgis.sources
 
 # Install QGIS and GRASS plugin
-RUN apt-get update && apt-get install -y \
-    qgis \
-    qgis-plugin-grass 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends\
+        qgis \
+        qgis-plugin-grass \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-RUN useradd -ms /bin/bash qgis && \
-    echo "qgis:qgis" | chpasswd && \
-    adduser qgis sudo && \
-    mkdir -p /tmp/.X11-unix && \
-    chmod 1777 /tmp/.X11-unix && \
-    touch /home/qgis/.Xresources && \
-    chown qgis:qgis /home/qgis/.Xresources
+RUN useradd -ms /bin/bash qgis \
+    && echo "qgis:qgis" | chpasswd \
+    && adduser qgis sudo \
+    && mkdir -p /tmp/.X11-unix \
+    && chmod 1777 /tmp/.X11-unix \
+    && touch /home/qgis/.Xresources \
+    && chown qgis:qgis /home/qgis/.Xresources
 
-# Disable lxpolkit to avoid session warnings
-RUN sed -i '/lxpolkit/d' /etc/xdg/lxsession/LXDE/autostart
+# Prepare the session
+COPY .xsession /home/qgis/.xsession
+RUN chown qgis:qgis /home/qgis/.xsession
 
-# Copy startup script
-COPY init.sh /home/qgis/init.sh
-RUN chmod +x /home/qgis/init.sh && chown qgis:qgis /home/qgis/init.sh
+# Shared drive symlink to transfer files with guacamole
+RUN ln -s /drive/transfer /home/qgis/transfer
 
-USER qgis
-ENV USER=qgis
-WORKDIR /home/qgis
+# Expose port for xrdp
+EXPOSE 3389
 
-EXPOSE 5901
+# Execute command at image creation
+CMD service dbus start \
+    && service xrdp start \
+    && tail -f /var/log/xrdp-sesman.log
 
-CMD ["./init.sh"]
