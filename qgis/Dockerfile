@@ -4,22 +4,32 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install basic tools and desktop dependencies
 RUN apt-get update \
-    && apt-get install -y \
+    && apt-get install -y  --no-install-recommends\
+        xfce4-panel \
+        xfce4-session \
+        xfce4-settings \
+        xfdesktop4 \
+        xfce4-terminal \
+        xfce4-appfinder \
+        thunar \
+        xfconf \
+        xfwm4 \
+        falkon \
+        wmctrl \
         xrdp \
-        xfce4 \
         dbus-x11 \
-        x11-xserver-utils \
-        ca-certificates \
-        gnupg \
-        wget \
-        sudo \
-        lsb-release \
-        software-properties-common \
+        xorg\
+        xorgxrdp \
         fonts-open-sans \
         fonts-dejavu \
         fonts-liberation \
         fonts-freefont-ttf \
-        x11-utils \
+        software-properties-common \
+        ca-certificates \
+        sudo \
+        gnupg \
+        wget \
+        lsb-release \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -50,24 +60,31 @@ RUN apt-get update \
 # Create non-root user
 RUN useradd -ms /bin/bash qgis \
     && echo "qgis:qgis" | chpasswd \
-    && adduser qgis sudo \
-    && mkdir -p /tmp/.X11-unix \
-    && chmod 1777 /tmp/.X11-unix \
-    && touch /home/qgis/.Xresources \
-    && chown qgis:qgis /home/qgis/.Xresources
+    && adduser qgis sudo
 
-# Prepare the session
-COPY .xsession /home/qgis/.xsession
-RUN chown qgis:qgis /home/qgis/.xsession
+# Configure XRDP +XFCE
+COPY startwm.sh /etc/xrdp/startwm.sh
+RUN chmod +x /etc/xrdp/startwm.sh
+
+# Autostart to qgis
+#RUN mkdir -p /home/qgis/.config/autostart \
+#    && mkdir -p /home/qgis/.cache/sessions \
+#    && rm -rf /home/qgis/.cache/sessions 
+#
+#COPY qgis.desktop /home/qgis/.config/autostart/qgis.desktop
 
 # Shared drive symlink to transfer files with guacamole
 RUN ln -s /drive/transfer /home/qgis/transfer
+
+# Ensure qgis is the owner of /home/qgis
+RUN chown -R qgis:qgis /home/qgis
 
 # Expose port for xrdp
 EXPOSE 3389
 
 # Execute command at image creation
-CMD service dbus start \
+CMD chown -R qgis:qgis /home/qgis  \
+    && service dbus start \
     && service xrdp start \
     && tail -f /var/log/xrdp-sesman.log
 
