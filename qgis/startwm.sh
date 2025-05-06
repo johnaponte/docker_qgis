@@ -12,6 +12,7 @@ fi
 export DESKTOP_SESSION=xfce
 export XDG_SESSION_DESKTOP=xfce
 export XDG_CURRENT_DESKTOP=XFCE
+export GTK_A11Y=none
 
 # Lanzar el demonio de configuración de XFCE si no se lanza solo
 #/usr/lib/x86_64-linux-gnu/xfce4/xfconf/xfconfd --replace &
@@ -27,6 +28,9 @@ xfwm4 &
 
 # Panel de XFCE
 xfce4-panel &
+
+# Keyboard configuration
+/usr/bin/xfsettingsd &
 
 # File manager opcional
 # thunar &
