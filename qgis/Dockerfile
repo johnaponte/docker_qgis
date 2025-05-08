@@ -65,16 +65,12 @@ RUN useradd -ms /bin/bash qgis \
 # Configure XRDP +XFCE
 COPY startwm.sh /etc/xrdp/startwm.sh
 RUN chmod +x /etc/xrdp/startwm.sh
+COPY qgis.desktop /etc/xrdp/startwm.shnfig/autostart/qgis.desktop
+RUN chmod +x /etc/xrdp/startwm.shnfig/autostart/qgis.desktop
 
-# Autostart to qgis
-#RUN mkdir -p /home/qgis/.config/autostart \
-#    && mkdir -p /home/qgis/.cache/sessions \
-#    && rm -rf /home/qgis/.cache/sessions 
-#
-#COPY qgis.desktop /home/qgis/.config/autostart/qgis.desktop
-
-# Shared drive symlink to transfer files with guacamole
-RUN ln -s /drive/transfer /home/qgis/transfer
+# Directory to transfer files
+RUN mkdir -p /tmp/transfer \
+  && chmod 777 /tmp/transfer
 
 # Ensure qgis is the owner of /home/qgis
 RUN chown -R qgis:qgis /home/qgis

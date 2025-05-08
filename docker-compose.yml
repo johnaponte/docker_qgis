@@ -12,9 +12,12 @@ services:
     - ./data/qgis-projects:/home/qgis/qgis-projects
     - ./data/qgis-config/.local/share/QGIS:/home/qgis/.local/share/QGIS
     - ./data/qgis-config/.config/QGIS:/home/qgis/.config/QGIS
+    - shared-transfer:/tmp/transfer
   guacd:
     image: guacamole/guacd:1.5.5
     container_name: guacd
+    volumes:
+    - shared-transfer:/tmp/transfer
     restart: unless-stopped
   mysql:
     build:
@@ -49,3 +52,5 @@ services:
     depends_on:
     - guacd
     - mysql
+volumes:
+  shared-transfer:
