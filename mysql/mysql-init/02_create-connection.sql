@@ -12,6 +12,6 @@ VALUES
   (@connection_id, 'username', 'qgis'),
   (@connection_id, 'password', 'qgis'),
   (@connection_id, 'enable-drive', 'true'),
-  (@connection_id, 'drive-name', 'transfer'),
-  (@connection_id, 'drive-path', '/tmp/transfer'),
+  (@connection_id, 'drive-name', 'share'),
+  (@connection_id, 'drive-path', '/tmp/share'),
   (@connection_id, 'create-drive-path', 'true');

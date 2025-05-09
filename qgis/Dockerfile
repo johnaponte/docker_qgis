@@ -65,15 +65,21 @@ RUN useradd -ms /bin/bash qgis \
 # Configure XRDP +XFCE
 COPY startwm.sh /etc/xrdp/startwm.sh
 RUN chmod +x /etc/xrdp/startwm.sh
-COPY qgis.desktop /etc/xrdp/startwm.shnfig/autostart/qgis.desktop
-RUN chmod +x /etc/xrdp/startwm.shnfig/autostart/qgis.desktop
+COPY sesman.ini /etc/xrdp/sesman.ini
+#COPY qgis.desktop /etc/xrdp/startwm.shnfig/autostart/qgis.desktop
+#RUN chmod +x /etc/xrdp/startwm.shnfig/autostart/qgis.desktop
 
 # Directory to transfer files
-RUN mkdir -p /tmp/transfer \
-  && chmod 777 /tmp/transfer
+RUN mkdir -p /tmp/share \
+  && chmod 777 /tmp/share \
+  && mkdir -p /home/qgis/share \
+  && chmod 777  /home/qgis/share
 
 # Ensure qgis is the owner of /home/qgis
-RUN chown -R qgis:qgis /home/qgis
+RUN chown -R qgis:qgis /home/qgis \
+    && chown -R  qgis:qgis /tmp/share \
+    && chown -R  qgis:qgis /home/qgis/share
+
 
 # Expose port for xrdp
 EXPOSE 3389

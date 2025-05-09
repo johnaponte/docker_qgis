@@ -12,12 +12,12 @@ services:
     - ./data/qgis-projects:/home/qgis/qgis-projects
     - ./data/qgis-config/.local/share/QGIS:/home/qgis/.local/share/QGIS
     - ./data/qgis-config/.config/QGIS:/home/qgis/.config/QGIS
-    - shared-transfer:/tmp/transfer
+    - thinclient_data:/home/qgis/share
   guacd:
     image: guacamole/guacd:1.5.5
     container_name: guacd
     volumes:
-    - shared-transfer:/tmp/transfer
+    - thinclient_data:/tmp/share
     restart: unless-stopped
   mysql:
     build:
@@ -53,4 +53,4 @@ services:
     - guacd
     - mysql
 volumes:
-  shared-transfer:
+  thinclient_data:
