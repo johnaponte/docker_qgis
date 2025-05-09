@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=QGIS Maximized
+Exec=sh -c "qgis & sleep 5 && wmctrl -r QGIS -b add,maximized_vert,maximized_horz"
+X-GNOME-Autostart-enabled=true

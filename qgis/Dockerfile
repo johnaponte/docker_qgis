@@ -3,37 +3,42 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install basic tools and desktop dependencies
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    gnupg \
-    wget \
-    sudo \
-    lsb-release \
-    software-properties-common \
-    fonts-open-sans \
-    fonts-dejavu \
-    fonts-liberation \
-    fonts-freefont-ttf \
-    x11vnc \
-    xvfb \
-    xterm \
-    x11-xserver-utils \
-    xfonts-75dpi \
-    xfonts-100dpi \
-    arandr \
-    lxrandr \
-    x11-utils \
-    lxde \
-    dbus-x11 \
-    notify-osd  &&\
-    mv /usr/bin/lxpolkit /usr/bin/lxpolkit.disabled
+RUN apt-get update \
+    && apt-get install -y  --no-install-recommends\
+        xfce4-panel \
+        xfce4-session \
+        xfce4-settings \
+        xfdesktop4 \
+        xfce4-terminal \
+        xfce4-appfinder \
+        thunar \
+        xfconf \
+        xfwm4 \
+        falkon \
+        wmctrl \
+        xrdp \
+        dbus-x11 \
+        xorg\
+        xorgxrdp \
+        fonts-open-sans \
+        fonts-dejavu \
+        fonts-liberation \
+        fonts-freefont-ttf \
+        software-properties-common \
+        ca-certificates \
+        sudo \
+        gnupg \
+        wget \
+        lsb-release \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 ARG QGIS_CHANNEL
 
 # Add QGIS GPG key
-RUN mkdir -p /etc/apt/keyrings && \
-    wget -O /etc/apt/keyrings/qgis-archive-keyring.gpg \
-    https://download.qgis.org/downloads/qgis-archive-keyring.gpg
+RUN mkdir -p /etc/apt/keyrings \
+    && wget -O /etc/apt/keyrings/qgis-archive-keyring.gpg \
+        https://download.qgis.org/downloads/qgis-archive-keyring.gpg
 
 # Add QGIS .sources file using the selected QGIS_CHANNEL
 RUN echo "Types: deb deb-src\n\
@@ -45,30 +50,43 @@ Signed-By: /etc/apt/keyrings/qgis-archive-keyring.gpg" \
 > /etc/apt/sources.list.d/qgis.sources
 
 # Install QGIS and GRASS plugin
-RUN apt-get update && apt-get install -y \
-    qgis \
-    qgis-plugin-grass 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends\
+        qgis \
+        qgis-plugin-grass \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-RUN useradd -ms /bin/bash qgis && \
-    echo "qgis:qgis" | chpasswd && \
-    adduser qgis sudo && \
-    mkdir -p /tmp/.X11-unix && \
-    chmod 1777 /tmp/.X11-unix && \
-    touch /home/qgis/.Xresources && \
-    chown qgis:qgis /home/qgis/.Xresources
+RUN useradd -ms /bin/bash qgis \
+    && echo "qgis:qgis" | chpasswd \
+    && adduser qgis sudo
 
-# Disable lxpolkit to avoid session warnings
-RUN sed -i '/lxpolkit/d' /etc/xdg/lxsession/LXDE/autostart
+# Configure XRDP +XFCE
+COPY startwm.sh /etc/xrdp/startwm.sh
+RUN chmod +x /etc/xrdp/startwm.sh
+COPY sesman.ini /etc/xrdp/sesman.ini
+#COPY qgis.desktop /etc/xrdp/startwm.shnfig/autostart/qgis.desktop
+#RUN chmod +x /etc/xrdp/startwm.shnfig/autostart/qgis.desktop
 
-# Copy startup script
-COPY init.sh /home/qgis/init.sh
-RUN chmod +x /home/qgis/init.sh && chown qgis:qgis /home/qgis/init.sh
+# Directory to transfer files
+RUN mkdir -p /tmp/share \
+  && chmod 777 /tmp/share \
+  && mkdir -p /home/qgis/share \
+  && chmod 777  /home/qgis/share
 
-USER qgis
-ENV USER=qgis
-WORKDIR /home/qgis
+# Ensure qgis is the owner of /home/qgis
+RUN chown -R qgis:qgis /home/qgis \
+    && chown -R  qgis:qgis /tmp/share \
+    && chown -R  qgis:qgis /home/qgis/share
 
-EXPOSE 5901
 
-CMD ["./init.sh"]
+# Expose port for xrdp
+EXPOSE 3389
+
+# Execute command at image creation
+CMD chown -R qgis:qgis /home/qgis  \
+    && service dbus start \
+    && service xrdp start \
+    && tail -f /var/log/xrdp-sesman.log
+

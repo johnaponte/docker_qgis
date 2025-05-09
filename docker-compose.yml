@@ -3,22 +3,22 @@ services:
     build:
       context: ./qgis
       args:
-        QGIS_CHANNEL: ubuntu-ltr  # Options: ubuntu, ubuntu-ltr
-    container_name: qgis  
+        QGIS_CHANNEL: ubuntu-ltr
+    container_name: qgis
     ports:
-      - "5901:5901"
+    - 3389:3389
     restart: unless-stopped
-
     volumes:
-      - ./data/qgis-projects:/home/qgis/qgis-projects
-      - ./data/qgis-config/.local/share/QGIS:/home/qgis/.local/share/QGIS
-      - ./data/qgis-config/.config/QGIS:/home/qgis/.config/QGIS
-
+    - ./data/qgis-projects:/home/qgis/qgis-projects
+    - ./data/qgis-config/.local/share/QGIS:/home/qgis/.local/share/QGIS
+    - ./data/qgis-config/.config/QGIS:/home/qgis/.config/QGIS
+    - thinclient_data:/home/qgis/share
   guacd:
     image: guacamole/guacd:1.5.5
     container_name: guacd
+    volumes:
+    - thinclient_data:/tmp/share
     restart: unless-stopped
-
   mysql:
     build:
       context: ./mysql
@@ -34,15 +34,13 @@ services:
       GUAC_USER: myuser
       GUAC_PASS: mypass123
     volumes:
-      - ./data/mysql:/var/lib/mysql
-
-
+    - ./data/mysql:/var/lib/mysql
   guacamole:
     image: guacamole/guacamole:1.5.5
     container_name: guacamole
     restart: unless-stopped
     ports:
-      - "8080:8080"
+    - 8080:8080
     environment:
       GUACD_HOSTNAME: guacd
       MYSQL_HOSTNAME: mysql
@@ -52,5 +50,7 @@ services:
       MYSQL_PASSWORD: guacpass
       MYSQL_ROOT_PASSWORD: rootpass
     depends_on:
-      - guacd
-      - mysql
+    - guacd
+    - mysql
+volumes:
+  thinclient_data:
