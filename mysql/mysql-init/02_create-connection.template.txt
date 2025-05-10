@@ -9,8 +9,8 @@ INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, param
 VALUES
   (@connection_id, 'hostname', 'qgis'),
   (@connection_id, 'port', '3389'),
-  (@connection_id, 'username', 'qgis'),
-  (@connection_id, 'password', 'qgis'),
+  (@connection_id, 'username', '${GUAC_USER}'),
+  (@connection_id, 'password', '${GUAC_PASS}'),
   (@connection_id, 'enable-drive', 'true'),
   (@connection_id, 'drive-name', 'share'),
   (@connection_id, 'drive-path', '/tmp/share'),

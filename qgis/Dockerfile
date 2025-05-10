@@ -4,21 +4,26 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install basic tools and desktop dependencies
 RUN apt-get update \
-    && apt-get install -y  --no-install-recommends\
+    && apt-get install -y --no-install-recommends \
         xfce4-panel \
         xfce4-session \
         xfce4-settings \
         xfdesktop4 \
         xfce4-terminal \
         xfce4-appfinder \
+        xfce4-notifyd \
+        xfce4-pulseaudio-plugin \
+        xfce4-power-manager \
         thunar \
         xfconf \
         xfwm4 \
         falkon \
         wmctrl \
         xrdp \
+        at-spi2-core \
+        adwaita-icon-theme \
         dbus-x11 \
-        xorg\
+        xorg \
         xorgxrdp \
         fonts-open-sans \
         fonts-dejavu \
@@ -51,42 +56,20 @@ Signed-By: /etc/apt/keyrings/qgis-archive-keyring.gpg" \
 
 # Install QGIS and GRASS plugin
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends\
+    && apt-get install -y --no-install-recommends \
         qgis \
         qgis-plugin-grass \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
-RUN useradd -ms /bin/bash qgis \
-    && echo "qgis:qgis" | chpasswd \
-    && adduser qgis sudo
-
-# Configure XRDP +XFCE
+# Configure XRDP and XFCE
 COPY startwm.sh /etc/xrdp/startwm.sh
-RUN chmod +x /etc/xrdp/startwm.sh
 COPY sesman.ini /etc/xrdp/sesman.ini
-#COPY qgis.desktop /etc/xrdp/startwm.shnfig/autostart/qgis.desktop
-#RUN chmod +x /etc/xrdp/startwm.shnfig/autostart/qgis.desktop
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /etc/xrdp/startwm.sh /entrypoint.sh
 
-# Directory to transfer files
-RUN mkdir -p /tmp/share \
-  && chmod 777 /tmp/share \
-  && mkdir -p /home/qgis/share \
-  && chmod 777  /home/qgis/share
-
-# Ensure qgis is the owner of /home/qgis
-RUN chown -R qgis:qgis /home/qgis \
-    && chown -R  qgis:qgis /tmp/share \
-    && chown -R  qgis:qgis /home/qgis/share
-
-
-# Expose port for xrdp
+# Expose XRDP port
 EXPOSE 3389
 
-# Execute command at image creation
-CMD chown -R qgis:qgis /home/qgis  \
-    && service dbus start \
-    && service xrdp start \
-    && tail -f /var/log/xrdp-sesman.log
-
+# Run entrypoint script on container start
+CMD ["/entrypoint.sh"]
