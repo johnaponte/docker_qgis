@@ -11,12 +11,17 @@ RUN apt-get update \
         xfdesktop4 \
         xfce4-terminal \
         xfce4-appfinder \
+        xfce4-notifyd \
+        xfce4-pulseaudio-plugin \
+        xfce4-power-manager \
         thunar \
         xfconf \
         xfwm4 \
         falkon \
         wmctrl \
         xrdp \
+        at-spi2-core \
+        adwaita-icon-theme \
         dbus-x11 \
         xorg \
         xorgxrdp \
@@ -61,7 +66,7 @@ RUN apt-get update \
 COPY startwm.sh /etc/xrdp/startwm.sh
 COPY sesman.ini /etc/xrdp/sesman.ini
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /etc/xrdp/startwm.sh /entrypoint.sh
 
 # Expose XRDP port
 EXPOSE 3389

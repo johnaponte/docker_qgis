@@ -1,45 +1,75 @@
 #!/bin/sh
 
-if [ -r /etc/profile ]; then
-    . /etc/profile
-fi
+# Redirect stdout and stderr to Docker-visible log file
+exec >> /tmp/startwm.log 2>&1
 
-# Lanzar dbus si no está activo
-if [ -z "\$DBUS_SESSION_BUS_ADDRESS" ]; then
-    eval "\$(dbus-launch --sh-syntax --exit-with-session)"
-fi
+echo "[startwm.sh] launched ************************"
 
+# Fix runtime dir to avoid XDG warnings
+export XDG_RUNTIME_DIR=/tmp/runtime-$USER
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+
+# Avoid accessibility bridge warnings
+export NO_AT_BRIDGE=1
+
+# Set display environment
+export DISPLAY=:10
+export XAUTHORITY="/home/$USER/.Xauthority"
+
+# Set XFCE-related environment vars
 export DESKTOP_SESSION=xfce
 export XDG_SESSION_DESKTOP=xfce
 export XDG_CURRENT_DESKTOP=XFCE
 export GTK_A11Y=none
 
-# Lanzar el demonio de configuración de XFCE si no se lanza solo
-#/usr/lib/x86_64-linux-gnu/xfce4/xfconf/xfconfd --replace &
-
-# Iniciar gestor de configuración manualmente si lo querés
-# /usr/lib/xfce4/xfsettingsd &
-
-# Iniciar el gestor de ventanas (barras, bordes)
+# Launch XFCE components
+echo "[startwm.sh] Starting XFCE..."
 xfwm4 &
+xfce4-panel &
+xfsettingsd &
 
-# Fondo e iconos (opcional)
+#opcional ##
+# File manager 
+# thunar &
+# Desktop icons 
 #xfdesktop &
 
-# Panel de XFCE
-xfce4-panel &
+# Disable compositor after XFCE is running
+sleep 1  # give it a sec to start
+xfconf-query -c xfwm4 -p /general/use_compositing --create -t bool -s false
 
-# Keyboard configuration
-/usr/bin/xfsettingsd &
+# Clean the panel
+rm -rf ~/.config/xfce4/panel
 
-# File manager opcional
-# thunar &
- 
-# Iniciar QGIS maximizado
-qgis & sleep 5 && wmctrl -r QGIS -b add,maximized_vert,maximized_horz &
+# Start QGIS
+echo "[startwm.sh] Launching QGIS..."
+qgis &
 
-# Mantener sesión viva (esperar a que panel termine)
+# Wait for the main QGIS window to appear (not splash or helper windows)
+echo "[startwm.sh] Waiting for main QGIS window..."
+while true; do
+    echo "[DEBUG] Current open windows:"
+    wmctrl -l || echo "[DEBUG] Could not retrieve window list"
+
+    QGIS_LINE=$(wmctrl -l | grep " — QGIS" | head -n1)
+
+    if [ -n "$QGIS_LINE" ]; then
+        echo "[DEBUG] Main QGIS window detected:"
+        echo "[DEBUG] $QGIS_LINE"
+
+        QGIS_ID=$(echo "$QGIS_LINE" | awk '{print $1}')
+        echo "[DEBUG] Maximizing window ID: $QGIS_ID"
+        wmctrl -i -r "$QGIS_ID" -b add,maximized_vert,maximized_horz
+
+        break
+    else
+        echo "[DEBUG] No main QGIS window found yet..."
+        sleep 1
+    fi
+done
+
+# Keep session alive
+echo "[startwm.sh] XFCE + QGIS running."
 wait
 
-# OR start xfce4....
-#startxfce4 &

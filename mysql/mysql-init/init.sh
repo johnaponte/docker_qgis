@@ -11,7 +11,7 @@ INIT_DIR="/docker-entrypoint-initdb.d"
 mkdir -p "$INIT_DIR"
 
 envsubst < /mysql-init/03_create-users.template.txt > "/mysql-init/03_create-users.sql"
-
+envsubst < /mysql-init/02_create-connection.template.txt > "/mysql-init/02_create-connection.sql"
 cat \
   /mysql-init/01_create-schema.sql \
   /mysql-init/02_create-connection.sql \
