@@ -1,0 +1,14 @@
+{
+  "NAME": "English",
+  
+  "APP": {
+    "NAME": "QGIS Remote Desktop"
+  },
+
+  "LOGIN": {
+    "TITLE": "QGIS Remote Desktop",
+    "USERNAME": "Username",
+    "PASSWORD": "Password",
+    "LOGIN": "Sign In"
+  }
+}
