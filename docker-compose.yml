@@ -6,51 +6,58 @@ services:
         QGIS_CHANNEL: ubuntu-ltr
     container_name: qgis
     ports:
-    - 3389:3389
+      - "3389:3389"
     restart: unless-stopped
     volumes:
-    - ./data/qgis-projects:/home/qgis/qgis-projects
-    - ./data/qgis-config/.local/share/QGIS:/home/qgis/.local/share/QGIS
-    - ./data/qgis-config/.config/QGIS:/home/qgis/.config/QGIS
-    - thinclient_data:/home/qgis/share
+      - ./data/qgis-projects:/home/${USER_NAME}/qgis-projects
+      - ./data/qgis-config/.local/share/QGIS:/home/${USER_NAME}/.local/share/QGIS
+      - ./data/qgis-config/.config/QGIS:/home/${USER_NAME}/.config/QGIS
+      - thinclient_data:/home/${USER_NAME}/share
+    environment:
+      - USER_NAME=${USER_NAME}
+      - USER_PASSWORD=${USER_PASSWORD}
+
   guacd:
     image: guacamole/guacd:1.5.5
     container_name: guacd
     volumes:
-    - thinclient_data:/tmp/share
+      - thinclient_data:/tmp/share
     restart: unless-stopped
+
   mysql:
     build:
       context: ./mysql
     container_name: mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: guacamole_db
-      MYSQL_USER: guacuser
-      MYSQL_PASSWORD: guacpass
-      GUACADMIN_USER: guacadmin
-      GUACADMIN_PASS: guacadmin
-      GUAC_USER: myuser
-      GUAC_PASS: mypass123
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=guacamole_db
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - GUACADMIN_USER=${GUACADMIN_USER}
+      - GUACADMIN_PASS=${GUACADMIN_PASS}
+      - GUAC_USER=${USER_NAME}
+      - GUAC_PASS=${USER_PASSWORD}
     volumes:
-    - ./data/mysql:/var/lib/mysql
+      - ./data/mysql:/var/lib/mysql
+
   guacamole:
     image: guacamole/guacamole:1.5.5
     container_name: guacamole
-    restart: unless-stopped
+    links:
+      - guacd
+      - mysql
     ports:
-    - 8080:8080
+      - "8080:8080"
     environment:
-      GUACD_HOSTNAME: guacd
-      MYSQL_HOSTNAME: mysql
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: guacamole_db
-      MYSQL_USER: guacuser
-      MYSQL_PASSWORD: guacpass
-      MYSQL_ROOT_PASSWORD: rootpass
+      - GUACD_HOSTNAME=guacd
+      - MYSQL_HOSTNAME=mysql
+      - MYSQL_DATABASE=guacamole_db
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     depends_on:
-    - guacd
-    - mysql
+      - guacd
+      - mysql
+
 volumes:
   thinclient_data:
