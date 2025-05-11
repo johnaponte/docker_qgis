@@ -1,18 +1,22 @@
 {
 
         "guacamoleVersion" : "*",
-        "name" : "Tempname",
-        "namespace" : "tempnamespace",
+        "name" : "Custom Guacamole Theme",
+        "namespace" : "custom-namespace",
+        "smallIcon" : "images/logo-64.png",
+        "largeIcon" : "images/logo-144.png",
         "translations" : [ 
-		"translations/en.json"
-	 ],
+        "translations/en.json"
+     ],
 
-	 "css" : [
-                "css/login-override.css"
+     "css" : [
+                "css/custom-theme.css"
          ],
 
-	 "resources" : {
-                "images/logo-placeholder.png" : "image/png"
+     "resources" : {
+                "images/logo.png" : "image/png",
+                "images/logo-64.png" : "image/png",
+                "images/logo-144.png" : "image/png"
          }
 }
 
