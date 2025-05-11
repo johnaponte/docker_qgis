@@ -14,4 +14,9 @@ VALUES
   (@connection_id, 'enable-drive', 'true'),
   (@connection_id, 'drive-name', 'share'),
   (@connection_id, 'drive-path', '/tmp/share'),
-  (@connection_id, 'create-drive-path', 'true');
+  (@connection_id, 'create-drive-path', 'true'),
+  (@connection_id, 'resize-method', 'display-update');
+
+  
+
+  

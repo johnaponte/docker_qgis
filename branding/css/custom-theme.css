@@ -1,0 +1,66 @@
+/* QGIS-inspired palette */
+:root {
+    --qgis-green: #589632;
+    --qgis-bg: #344c25;
+    --qgis-dark-gray: #3a3939;
+    --qgis-light-gray: #eeeeee;
+    --qgis-text: #2c2c2c;
+    --qgis-error: #d9534f;
+    --qgis-font: 'Open Sans', sans-serif;
+}
+
+/* Reset and base styles */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: var(--qgis-font);
+    font-size: 14px; /* base font size for em units */
+}
+
+/* Full-screen background */
+.login-ui {
+    background-color: var(--qgis-dark-gray);
+    display: flex;              /* enables flex layout */
+    justify-content: center;    /* center horizontally */
+    align-items: center;        /* center vertically */
+    height: 100vh;
+}
+
+/* Intermediate container for centering */
+.login-ui .login-dialog-middle {
+    background-color: var(--qgis-dark-gray);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+/* Login dialog box - centered and compact */
+.login-ui .login-dialog {
+    background-color: var(--qgis-light-gray);
+    width: 100%;
+    max-width: 20em;        
+    padding: 1em;
+    font-size: 1.25em;
+    box-shadow: 0 0 0.625em rgba(0, 0, 0, 0.5); /* 10px -> 0.625em */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5em;
+    text-align: center;
+}
+
+/* Logo area - background image centered and scaled */
+.login-ui .login-dialog .logo {
+    width: 100%;
+    max-width: 10em;
+    height: 2em;
+    background-image: url('app/ext/custom-namespace/images/logo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin: 0 auto;
+}
