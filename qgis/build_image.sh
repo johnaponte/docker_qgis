@@ -49,8 +49,8 @@ docker build \
   --label org.opencontainers.image.created="${CREATED_DATE}" \
   --label org.opencontainers.image.description="QGIS container with XRDP, based on channel ${QGIS_CHANNEL}" \
   --label org.opencontainers.image.licenses="MIT" \
-  --label org.opencontainers.image.source="https://github.com/johnaponte/qgis-guacamole" \
-  --label org.opencontainers.image.documentation="https://github.com/johnaponte/qgis-guacamole#readme" \
+  --label org.opencontainers.image.source="https://github.com/johnaponte/docker_qgis/tree/main/qgis" \
+  --label org.opencontainers.image.documentation="https://github.com/johnaponte/docker_qgis/blob/main/qgis/README.md" \
   -t "${IMAGE_NAME}:${TAG}" \
   .
 
