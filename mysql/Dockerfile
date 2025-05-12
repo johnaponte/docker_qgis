@@ -1,4 +1,6 @@
-FROM mysql:8.4
+ARG MYSQL_VERSION=8.4
+
+FROM mysql:${MYSQL_VERSION}
 
 # Install envsubst (gettext)
 RUN microdnf install -y gettext \
