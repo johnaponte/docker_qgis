@@ -28,6 +28,8 @@
 ## script, running in the foreground until terminated.
 ##
 
+## MODIFIED to allow GUACAMOLE_HOME_TEMPLATE be setup by an environment variable
+
 GUACAMOLE_HOME_TEMPLATE="${GUACAMOLE_HOME_TEMPLATE:-$GUACAMOLE_HOME}"
 
 GUACAMOLE_HOME="$HOME/.guacamole"

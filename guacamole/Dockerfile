@@ -1,4 +1,5 @@
-FROM guacamole/guacamole:1.5.5
+ARG GUACAMOLE_VERSION=1.5.5
+FROM guacamole/guacamole:${GUACAMOLE_VERSION}
 
 USER root
 
