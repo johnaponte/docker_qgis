@@ -1,14 +1,14 @@
 USE guacamole_db;
 
 INSERT INTO guacamole_connection (connection_name, protocol)
-VALUES ('QGIS Remote', 'rdp');
+VALUES ('${CONNECTION_NAME}', 'rdp');
 
 SET @connection_id := LAST_INSERT_ID();
 
 INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value)
 VALUES
-  (@connection_id, 'hostname', 'qgis'),
-  (@connection_id, 'port', '3389'),
+  (@connection_id, 'hostname', '${APP_HOSTNAME}'),
+  (@connection_id, 'port', '${APP_HOSTPORT}'),
   (@connection_id, 'username', '${GUAC_USER}'),
   (@connection_id, 'password', '${GUAC_PASS}'),
   (@connection_id, 'enable-drive', 'true'),

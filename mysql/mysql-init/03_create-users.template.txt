@@ -36,8 +36,8 @@ INSERT INTO guacamole_user (entity_id, password_hash, password_salt, password_da
 SELECT entity_id, @hash_user, @salt_user, NOW()
 FROM guacamole_entity WHERE name = '${GUAC_USER}';
 
--- GRANT read access to "QGIS Remote" connection
-SET @conn_id := (SELECT connection_id FROM guacamole_connection WHERE connection_name = 'QGIS Remote');
+-- GRANT read access to "Remote" connection
+SET @conn_id := (SELECT connection_id FROM guacamole_connection WHERE connection_name = '${CONNECTION_NAME}');
 
 INSERT INTO guacamole_connection_permission (entity_id, connection_id, permission)
 SELECT entity_id, @conn_id, 'READ' FROM guacamole_entity WHERE name IN ('${GUACADMIN_USER}', '${GUAC_USER}');
