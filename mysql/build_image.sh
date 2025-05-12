@@ -5,7 +5,7 @@ set -e
 
 # Configuration: 
 # Ensure MySQL version continainer
-MYSQL_VERSION="8.4"
+MYSQL_VERSION="8.4.5"
 TAG="1.0.0"
 
 # Derived values

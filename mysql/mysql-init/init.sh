@@ -7,8 +7,8 @@ set -x
 : "${GUAC_USER:?Missing GUAC_USER}"
 : "${GUAC_PASS:?Missing GUAC_PASS}"
 : "${CONNECTION_NAME:?Missing CONNECTION_NAME}"
-: "${HOST_NAME:?Missing HOST_NAME}"
-: "${HOST_PORT:?Missing HOST_PORT}"
+: "${APP_HOSTNAME:?Missing APP_HOSTNAME}"
+: "${APP_HOSTPORT:?Missing APP_HOSTPORT}"
 
 INIT_DIR="/docker-entrypoint-initdb.d"
 mkdir -p "$INIT_DIR"
