@@ -1,6 +1,11 @@
 #!/bin/bash
 
-source build_image.env
+if [[ -f "$(dirname "$0")/build_image.env" ]]; then
+  source "$(dirname "$0")/build_image.env"
+else
+  echo "[ERROR] build_image.env not found in script directory."
+  exit 1
+fi
 
 # Exit on any error
 set -e
@@ -31,7 +36,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-IMAGE_NAME="${HOSTNAME_TO}/${IMAGE_BASE}"
+IMAGE_NAME="${NAMESPACE_TO}/${IMAGE_BASE}"
 
 # Ensure docker buildx is available and initialized
 if ! docker buildx version &> /dev/null; then
