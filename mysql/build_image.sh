@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source build_image.env
+
 # Exit on any error
 set -e
 
@@ -29,31 +31,39 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Compose full image name
-if [[ -n "$DOCKER_USER" ]]; then
-  IMAGE_NAME="${DOCKER_USER}/${IMAGE_BASE}"
-else
-  IMAGE_NAME="${IMAGE_BASE}"
+IMAGE_NAME="${HOSTNAME_TO}/${IMAGE_BASE}"
+
+# Ensure docker buildx is available and initialized
+if ! docker buildx version &> /dev/null; then
+  echo "[ERROR] docker buildx is not available. Please ensure Docker Buildx is installed and enabled."
+  exit 1
 fi
 
-# Build image
+if ! docker buildx inspect multiarch-builder &> /dev/null; then
+  echo "[INFO] Creating and bootstrapping buildx builder 'multiarch-builder'"
+  docker buildx create --name multiarch-builder --use
+  docker buildx inspect --bootstrap
+else
+  docker buildx use multiarch-builder
+  docker buildx inspect --bootstrap
+fi
+
 echo "[INFO] Building Docker image: ${IMAGE_NAME}:${TAG}"
-docker build \
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
   --build-arg MYSQL_VERSION="${MYSQL_VERSION}" \
   --label org.opencontainers.image.title="MySQL backend for Guacamole and XRDP connections" \
   --label org.opencontainers.image.version="${TAG}" \
-  --label org.opencontainers.image.created="${CREATED_DATE}" \
+  --label org.opencontainers.image.created="${BUILD_DATE}" \
   --label org.opencontainers.image.description="MySQL backed for Guacamole Authetication and xrdp connection" \
   --label org.opencontainers.image.licenses="MIT" \
   --label org.opencontainers.image.source="https://github.com/johnaponte/docker_qgis/tree/main/qgismysql" \
   --label org.opencontainers.image.documentation="https://github.com/johnaponte/docker_qgis/blob/main/mysql/README.md" \
   -t "${IMAGE_NAME}:${TAG}" \
+  -t "${IMAGE_NAME}:latest" \
+  --push \
   .
 
-# Also tag as latest
-docker tag "${IMAGE_NAME}:${TAG}" "${IMAGE_NAME}:latest"
-
-echo "[INFO] Build complete:"
+echo "[INFO] Build and push complete:"
 echo " - ${IMAGE_NAME}:${TAG}"
 echo " - ${IMAGE_NAME}:latest"
-

@@ -38,6 +38,7 @@ services:
   guacd:
     image: guacamole/guacd:1.5.5
     container_name: guacd
+    platform: linux/amd64
     volumes:
       - thinclient_data:/tmp/share
     restart: unless-stopped
@@ -68,6 +69,7 @@ services:
   guacamole:
     image: rd-guacamole-1_5_5:1.0.0
     container_name: guacamole
+    platform: linux/amd64
     ports:
       - "8080:8080"
     environment:

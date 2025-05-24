@@ -49,7 +49,6 @@ RUN mkdir -p /etc/apt/keyrings \
 RUN echo "Types: deb deb-src\n\
 URIs: https://qgis.org/${QGIS_CHANNEL}\n\
 Suites: $(lsb_release -c -s)\n\
-Architectures: amd64\n\
 Components: main\n\
 Signed-By: /etc/apt/keyrings/qgis-archive-keyring.gpg" \
 > /etc/apt/sources.list.d/qgis.sources
