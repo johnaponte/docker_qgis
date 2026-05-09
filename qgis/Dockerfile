@@ -2,6 +2,11 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Apply all Ubuntu security patches available at build time
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
+    
 # Install basic tools and desktop dependencies
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

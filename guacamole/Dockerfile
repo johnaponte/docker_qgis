@@ -3,6 +3,11 @@ FROM guacamole/guacamole:${GUACAMOLE_VERSION}
 
 USER root
 
+# Apply all Ubuntu security patches available at build time
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
+    
 # Set default GUACAMOLE_HOME_TEMPLATE
 ENV GUACAMOLE_HOME_TEMPLATE=/template
 

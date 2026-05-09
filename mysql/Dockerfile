@@ -2,6 +2,11 @@ ARG MYSQL_VERSION=8.4
 
 FROM mysql:${MYSQL_VERSION}
 
+# Update all OS packages to patch known CVEs
+RUN microdnf update -y \
+    && microdnf install -y gettext \
+    && microdnf clean all
+    
 # Install envsubst (gettext)
 RUN microdnf install -y gettext \
     && microdnf clean all
