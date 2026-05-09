@@ -1,5 +1,6 @@
 #!/bin/bash
 # Requires: docker login already completed before running this script.
+# Use --no-push to build locally (single-platform, loaded into local daemon).
 set -e
 
 # ── Configuration ──────────────────────────────────────────────────────────────
@@ -22,6 +23,7 @@ BUILD_GUAC=false
 BUILD_MYSQL=false
 BUILD_QGIS=false
 DRY_RUN=false
+NO_PUSH=false
 YES=false
 
 # ── Tag helpers ────────────────────────────────────────────────────────────────
@@ -74,24 +76,46 @@ ensure_buildx() {
   docker buildx inspect --bootstrap
 }
 
+# ── Shared build helper ────────────────────────────────────────────────────────
+# Usage: run_buildx <image> <tag> [--build-arg KEY=VAL ...] [--label KEY=VAL ...]
+# Appends --push (multiarch) or --load (local) depending on NO_PUSH flag.
+run_buildx() {
+  local image="$1" tag="$2"
+  shift 2
+
+  if $NO_PUSH; then
+    docker buildx build \
+      --load \
+      "$@" \
+      -t "${image}:${tag}" \
+      -t "${image}:latest" \
+      .
+    echo "[INFO] Built locally (not pushed): ${image}:${tag} and ${image}:latest"
+  else
+    docker buildx build \
+      --platform linux/amd64,linux/arm64 \
+      "$@" \
+      -t "${image}:${tag}" \
+      -t "${image}:latest" \
+      --push \
+      .
+    echo "[INFO] Pushed: ${image}:${tag} and ${image}:latest"
+  fi
+}
+
 # ── Image builders ─────────────────────────────────────────────────────────────
 
 build_guacamole() {
   local tag="$1"
   echo ""
   echo "[INFO] === Guacamole: ${GUAC_IMAGE}:${tag} ==="
-
-  if $DRY_RUN; then
-    echo "[DRY-RUN] Would build and push ${GUAC_IMAGE}:${tag}"
-    return
-  fi
+  $DRY_RUN && echo "[DRY-RUN] Would build ${GUAC_IMAGE}:${tag}" && return
 
   cd "${SCRIPT_DIR}/guacamole"
   echo "[INFO] Packing branding..."
   ./pack_branding.sh
 
-  docker buildx build \
-    --platform linux/amd64,linux/arm64 \
+  run_buildx "${GUAC_IMAGE}" "${tag}" \
     --build-arg GUACAMOLE_VERSION="${GUACAMOLE_VERSION}" \
     --label org.opencontainers.image.title="Guacamole frontend with branding" \
     --label org.opencontainers.image.version="${tag}" \
@@ -99,30 +123,20 @@ build_guacamole() {
     --label org.opencontainers.image.description="Guacamole frontend with branding" \
     --label org.opencontainers.image.licenses="MIT" \
     --label org.opencontainers.image.source="https://github.com/johnaponte/docker_qgis/tree/main/guacamole" \
-    --label org.opencontainers.image.documentation="https://github.com/johnaponte/docker_qgis/blob/main/guacamole/README.md" \
-    -t "${GUAC_IMAGE}:${tag}" \
-    -t "${GUAC_IMAGE}:latest" \
-    --push \
-    .
+    --label org.opencontainers.image.documentation="https://github.com/johnaponte/docker_qgis/blob/main/guacamole/README.md"
 
   cd "${SCRIPT_DIR}"
-  echo "[INFO] Pushed: ${GUAC_IMAGE}:${tag} and ${GUAC_IMAGE}:latest"
 }
 
 build_mysql() {
   local tag="$1"
   echo ""
   echo "[INFO] === MySQL: ${MYSQL_IMAGE}:${tag} ==="
-
-  if $DRY_RUN; then
-    echo "[DRY-RUN] Would build and push ${MYSQL_IMAGE}:${tag}"
-    return
-  fi
+  $DRY_RUN && echo "[DRY-RUN] Would build ${MYSQL_IMAGE}:${tag}" && return
 
   cd "${SCRIPT_DIR}/mysql"
 
-  docker buildx build \
-    --platform linux/amd64,linux/arm64 \
+  run_buildx "${MYSQL_IMAGE}" "${tag}" \
     --build-arg MYSQL_VERSION="${MYSQL_VERSION}" \
     --label org.opencontainers.image.title="MySQL backend for Guacamole and XRDP connections" \
     --label org.opencontainers.image.version="${tag}" \
@@ -130,30 +144,20 @@ build_mysql() {
     --label org.opencontainers.image.description="MySQL backend for Guacamole authentication and xrdp connection" \
     --label org.opencontainers.image.licenses="MIT" \
     --label org.opencontainers.image.source="https://github.com/johnaponte/docker_qgis/tree/main/mysql" \
-    --label org.opencontainers.image.documentation="https://github.com/johnaponte/docker_qgis/blob/main/mysql/README.md" \
-    -t "${MYSQL_IMAGE}:${tag}" \
-    -t "${MYSQL_IMAGE}:latest" \
-    --push \
-    .
+    --label org.opencontainers.image.documentation="https://github.com/johnaponte/docker_qgis/blob/main/mysql/README.md"
 
   cd "${SCRIPT_DIR}"
-  echo "[INFO] Pushed: ${MYSQL_IMAGE}:${tag} and ${MYSQL_IMAGE}:latest"
 }
 
 build_qgis() {
   local tag="$1"
   echo ""
   echo "[INFO] === QGIS: ${QGIS_IMAGE}:${tag} ==="
-
-  if $DRY_RUN; then
-    echo "[DRY-RUN] Would build and push ${QGIS_IMAGE}:${tag}"
-    return
-  fi
+  $DRY_RUN && echo "[DRY-RUN] Would build ${QGIS_IMAGE}:${tag}" && return
 
   cd "${SCRIPT_DIR}/qgis"
 
-  docker buildx build \
-    --platform linux/amd64,linux/arm64 \
+  run_buildx "${QGIS_IMAGE}" "${tag}" \
     --build-arg QGIS_CHANNEL="${QGIS_CHANNEL}" \
     --label org.opencontainers.image.title="QGIS ${QGIS_VERSION} with xrdp" \
     --label org.opencontainers.image.version="${tag}" \
@@ -161,14 +165,9 @@ build_qgis() {
     --label org.opencontainers.image.description="QGIS container with XRDP, based on channel ${QGIS_CHANNEL}" \
     --label org.opencontainers.image.licenses="MIT" \
     --label org.opencontainers.image.source="https://github.com/johnaponte/docker_qgis/tree/main/qgis" \
-    --label org.opencontainers.image.documentation="https://github.com/johnaponte/docker_qgis/blob/main/qgis/README.md" \
-    -t "${QGIS_IMAGE}:${tag}" \
-    -t "${QGIS_IMAGE}:latest" \
-    --push \
-    .
+    --label org.opencontainers.image.documentation="https://github.com/johnaponte/docker_qgis/blob/main/qgis/README.md"
 
   cd "${SCRIPT_DIR}"
-  echo "[INFO] Pushed: ${QGIS_IMAGE}:${tag} and ${QGIS_IMAGE}:latest"
 }
 
 # ── CLI parsing ────────────────────────────────────────────────────────────────
@@ -179,12 +178,13 @@ Usage: $0 [OPTIONS]
 
 Build and release Docker images to Docker Hub with an auto-incremented minor tag.
 The user must already be logged in to Docker Hub (docker login) before running.
-If no image flag is given, all three images are released.
+If no image flag is given, all three images are built.
 
 Options:
-  --guacamole   Release only the Guacamole image
-  --mysql       Release only the MySQL image
-  --qgis        Release only the QGIS image
+  --guacamole   Build/release only the Guacamole image
+  --mysql       Build/release only the MySQL image
+  --qgis        Build/release only the QGIS image
+  --no-push     Build locally (single-platform, loaded into local daemon) without pushing
   --dry-run     Show what would be done without building or pushing
   --yes, -y     Skip confirmation prompt
   -h, --help    Show this help message
@@ -196,6 +196,7 @@ while [[ $# -gt 0 ]]; do
     --guacamole) BUILD_GUAC=true ;;
     --mysql)     BUILD_MYSQL=true ;;
     --qgis)      BUILD_QGIS=true ;;
+    --no-push)   NO_PUSH=true ;;
     --dry-run)   DRY_RUN=true ;;
     --yes|-y)    YES=true ;;
     -h|--help)   usage; exit 0 ;;
@@ -224,15 +225,18 @@ $BUILD_MYSQL && MYSQL_TAG=$(next_tag "$MYSQL_IMAGE")
 $BUILD_QGIS  && QGIS_TAG=$(next_tag "$QGIS_IMAGE")
 
 echo ""
-echo "[INFO] Release plan:"
+echo "[INFO] Build plan:"
 $BUILD_GUAC  && echo "  Guacamole : ${GUAC_IMAGE}:${GUAC_TAG}"
 $BUILD_MYSQL && echo "  MySQL     : ${MYSQL_IMAGE}:${MYSQL_TAG}"
 $BUILD_QGIS  && echo "  QGIS      : ${QGIS_IMAGE}:${QGIS_TAG}"
-$DRY_RUN     && echo "" && echo "[INFO] DRY-RUN mode — nothing will be pushed."
+$NO_PUSH     && echo "" && echo "[INFO] --no-push: images will be built locally, not pushed to Docker Hub."
+$DRY_RUN     && echo "" && echo "[INFO] --dry-run: nothing will be built or pushed."
 echo ""
 
 if ! $YES && ! $DRY_RUN; then
-  read -r -p "Proceed with build and push? [y/N] " confirm
+  $NO_PUSH \
+    && read -r -p "Proceed with local build (no push)? [y/N] " confirm \
+    || read -r -p "Proceed with build and push? [y/N] " confirm
   if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
     echo "[INFO] Aborted."
     exit 0
@@ -246,7 +250,7 @@ $BUILD_MYSQL && build_mysql     "$MYSQL_TAG"
 $BUILD_QGIS  && build_qgis      "$QGIS_TAG"
 
 echo ""
-echo "[INFO] Release complete:"
+echo "[INFO] Done:"
 $BUILD_GUAC  && echo "  ${GUAC_IMAGE}:${GUAC_TAG}"
 $BUILD_MYSQL && echo "  ${MYSQL_IMAGE}:${MYSQL_TAG}"
 $BUILD_QGIS  && echo "  ${QGIS_IMAGE}:${QGIS_TAG}"
