@@ -20,8 +20,50 @@ The main directories represent custom Docker images:
 - `mysql/`: MySQL database image configured for Guacamole
 - `guacamole/`: Custom-branded Guacamole frontend
 
-Each of these directories contains a `./build_image.sh` script to build the image.  
-Custom branding can be added via the `branding/` directory. Use `pack_branding.sh` to generate a `.jar` file used by the Guacamole image — it is automatically called inside `guacamole/build_image.sh`.
+Custom branding can be added via the `branding/` directory. Use `pack_branding.sh` to generate a `.jar` file used by the Guacamole image — it is automatically called by the release script.
+
+---
+
+## 🐳 Releasing Images to Docker Hub
+
+All three images are built and published from a single script at the root of the repository:
+
+```bash
+./release_to_dockerhub.sh
+```
+
+The script automatically reads the latest tag published on Docker Hub for each image and bumps the **minor** version (e.g. `1.0.0` → `1.1.0`). This convention is used for security-only updates. If an image has never been published, it starts at `1.0.0`.
+
+Both a versioned tag and `latest` are pushed for each image.
+
+> You must be logged in to Docker Hub before running the script (`docker login`).
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--guacamole` | Release only the Guacamole image |
+| `--mysql` | Release only the MySQL image |
+| `--qgis` | Release only the QGIS image |
+| `--no-push` | Build locally (single-platform, loaded into local daemon) without pushing |
+| `--dry-run` | Show the release plan without building or pushing anything |
+| `--yes` / `-y` | Skip the confirmation prompt |
+
+### Examples
+
+```bash
+# Release all three images
+./release_to_dockerhub.sh
+
+# Release only the QGIS image
+./release_to_dockerhub.sh --qgis
+
+# Build all images locally for testing (no push)
+./release_to_dockerhub.sh --no-push
+
+# Preview what would be released without doing anything
+./release_to_dockerhub.sh --dry-run
+```
 
 ---
 

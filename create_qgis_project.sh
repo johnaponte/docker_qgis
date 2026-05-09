@@ -21,7 +21,7 @@ EOF
 cat > docker-compose.yml <<EOF
 services:
   qgis:
-    image: rd-qgis-3_40_6:1.0.0
+    image: jjserver/rd-qgis-3_40_6:latest
     container_name: qgis
     restart: unless-stopped
     volumes:
@@ -46,7 +46,7 @@ services:
       - internal_net
 
   mysql:
-    image: rd-mysql-8_4_5:1.0.0
+    image: jjserver/rd-mysql-8_4_5:latest
     container_name: mysql
     restart: unless-stopped
     environment:
@@ -67,7 +67,7 @@ services:
       - internal_net
 
   guacamole:
-    image: rd-guacamole-1_5_5:1.0.0
+    image: jjserver/rd-guacamole-1_5_5:latest
     container_name: guacamole
     platform: linux/amd64
     ports:
