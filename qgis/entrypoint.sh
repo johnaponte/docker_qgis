@@ -28,6 +28,15 @@ chown -R "$USER_NAME:$USER_NAME" /tmp/share
 chmod 777 /home/"$USER_NAME"/share /tmp/share
 
 
+# Remove stale PID/socket files left in the container's writable layer.
+# On a container restart (e.g. OrbStack/Docker restart or host reboot) the old
+# PIDs may match unrelated processes, making xrdp report "already running"
+# and exit, which (with set -e) puts the container in a restart loop.
+rm -f /var/run/xrdp/xrdp.pid /var/run/xrdp/xrdp-sesman.pid \
+      /run/xrdp/xrdp.pid /run/xrdp/xrdp-sesman.pid \
+      /var/run/dbus/pid /var/run/dbus/system_bus_socket
+rm -rf /var/run/xrdp/sockdir /tmp/.X11-unix /tmp/.X*-lock
+
 # Start services
 service dbus start
 service xrdp start
